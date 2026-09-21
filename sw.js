@@ -1,4 +1,6 @@
-const CACHE = "norte-rpg-v2";
+// Al subir la versión se vuelve a instalar el service worker y se rehace el cache: es la única
+// forma de que a quien ya tiene la app instalada le lleguen el HTML/CSS/JS nuevos.
+const CACHE = "norte-rpg-v3";
 
 // Lo mínimo para que la app abra sin conexión.
 const ARCHIVOS = [

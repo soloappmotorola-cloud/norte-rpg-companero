@@ -42,10 +42,26 @@
     "hsla(42, 45%, 80%, 0.26)"
   ];
 
+  var escena = canvas.parentNode;
+
+  /* Alto real de lo que se ve. En el celular la barra de direcciones se esconde y se muestra
+     sola: `100vh` mide siempre la pantalla CON la barra escondida, así que con la barra a la
+     vista la parte de abajo de un elemento fijo — justo donde se apoya la escena — queda fuera
+     de la pantalla. El CSS ya usa `dvh`, esto es el refuerzo para navegadores donde `dvh` no
+     existe o llega tarde. No se toca si el usuario está haciendo zoom con dos dedos. */
+  function medirVisible() {
+    var vv = window.visualViewport;
+    if (vv && vv.scale && vv.scale > 1.01) return;
+    var h = (vv && vv.height) || window.innerHeight;
+    document.documentElement.style.setProperty("--alto-visible", Math.round(h) + "px");
+  }
+
   function medir() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
-    ancho = window.innerWidth;
-    alto = window.innerHeight;
+    // Se mide contra .escena y no contra window: el alto de .escena va en `dvh`, que sigue a la
+    // barra de direcciones del celular, mientras que window.innerHeight no siempre coincide.
+    ancho = (escena && escena.clientWidth) || window.innerWidth;
+    alto = (escena && escena.clientHeight) || window.innerHeight;
     canvas.width = Math.round(ancho * dpr);
     canvas.height = Math.round(alto * dpr);
     canvas.style.width = ancho + "px";
@@ -151,6 +167,7 @@
     if (!corriendo) arrancar();
   }
 
+  medirVisible();
   medir();
   sembrar();
 
@@ -173,7 +190,8 @@
   }
 
   var temporizador = null;
-  window.addEventListener("resize", function () {
+  function reacomodar() {
+    medirVisible(); // esto va sin demora: si no, el fondo queda corrido mientras se acomoda
     clearTimeout(temporizador);
     temporizador = setTimeout(function () {
       var previo = CANTIDAD;
@@ -182,5 +200,17 @@
       if (CANTIDAD !== previo) sembrar();
       if (quieto || !corriendo) dibujar();
     }, 200);
-  }, { passive: true });
+  }
+
+  window.addEventListener("resize", reacomodar, { passive: true });
+  window.addEventListener("orientationchange", reacomodar, { passive: true });
+
+  // En Chrome de Android, esconder o mostrar la barra de direcciones NO dispara `resize` de
+  // window (el viewport de maquetado no cambia), pero sí el del viewport visual. Sin esto el
+  // canvas del polvo queda con el alto viejo cuando la barra se esconde.
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", reacomodar, { passive: true });
+    window.visualViewport.addEventListener("scroll", medirVisible, { passive: true });
+  }
+  window.addEventListener("load", reacomodar, { passive: true });
 })();

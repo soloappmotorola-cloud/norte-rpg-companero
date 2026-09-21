@@ -29,10 +29,9 @@ html, body {
 body {
   font-family: "Nunito Sans", system-ui, sans-serif;
   color: var(--texto);
-  background:
-    radial-gradient(ellipse at 78% 8%, rgba(243, 238, 221, 0.14), transparent 40%),
-    linear-gradient(180deg, var(--noche) 0%, var(--cielo) 55%, var(--tierra) 100%);
-  background-attachment: fixed;
+  /* Fondo de respaldo, por si la escena todavía no cargó. Sin `background-attachment: fixed`:
+     en los navegadores de celular es otra fuente conocida de repintados que no ocurren. */
+  background: linear-gradient(180deg, var(--noche) 0%, var(--cielo) 55%, var(--tierra) 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -41,30 +40,66 @@ body {
 }
 
 /* --- Escena de la Puna: el mismo dibujo de juego-norte/pagina/ (luna, cerro, Runa Uturunco)
-   como fondo fijo y compartido de toda la app. Va como imagen de fondo (un único SVG con las
-   dos texturas adentro) y no como SVG en el DOM: así el navegador lo dibuja una sola vez y lo
-   guarda rasterizado, en vez de mantener miles de trazos vivos en la página. --- */
+   como fondo fijo y compartido de toda la app. Es un único SVG (con las dos texturas adentro)
+   metido en un <img>, no un SVG suelto en el DOM: el navegador lo rasteriza una vez y guarda el
+   mapa de bits, en vez de mantener miles de trazos vivos en la página.
+
+   La altura va en `dvh` y no `inset: 0`: en el celular la barra de direcciones se esconde y se
+   muestra sola, y un elemento fijo de alto `100vh` mide SIEMPRE la pantalla con la barra
+   escondida — o sea que con la barra a la vista la parte de abajo (justo donde se apoya la
+   escena) cae fuera de lo que se ve. `dvh` sigue a la barra.
+
+   `translateZ(0)` la manda a su propia capa de composición desde el arranque, para que se pinte
+   apenas carga el dibujo y no quede esperando un scroll o un cambio de tamaño. --- */
 .escena {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100dvh;
+  height: var(--alto-visible, 100dvh); /* refuerzo desde js/escena.js, ver ahí el porqué */
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
   background-color: var(--noche);
-  background-image: url("../img/escena-puna.svg");
-  background-repeat: no-repeat;
-  /* Apaisado (celular acostado, tablet, escritorio): la escena llena la pantalla como en
-     juego-norte/pagina/, anclada arriba para que la luna no quede justo detrás del título. */
-  background-position: 50% 0%;
-  background-size: cover;
+  transform: translateZ(0);
 }
 
 /* Vertical (el caso normal en la mesa): la escena se apoya abajo como una franja, así la luna
    y el Runa Uturunco parado en el cerro quedan DEBAJO de las tarjetas en vez de tapados por
-   ellas. El resto de la pantalla es cielo, que es el mismo color de fondo. */
-@media (max-aspect-ratio: 1/1) {
-  .escena {
-    background-position: 50% 100%;
-    background-size: auto 42%;
+   ellas. El resto de la pantalla es cielo, que es el mismo color de fondo.
+
+   El tamaño se mide contra el ANCHO de la pantalla (155%, con tope de 700 px para que en tablet
+   no se agrande de más), que no cambia cuando aparece o desaparece la barra de direcciones: así
+   el dibujo nunca se re-rasteriza, sólo se corre. `max-height` es una red de contención para
+   pantallas muy bajas; recorta cielo de arriba, que es color liso y no se nota. */
+.escena-dibujo {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  z-index: 0;
+  width: min(155%, 700px);
+  max-width: none;
+  height: auto;
+  max-height: 60%;
+  object-fit: cover;
+  object-position: 50% 100%;
+  transform: translateX(-50%);
+}
+
+/* Apaisado (celular acostado, tablet, escritorio): la escena llena la pantalla como en
+   juego-norte/pagina/, anclada arriba para que la luna no quede justo detrás del título. */
+@media (min-aspect-ratio: 1/1) {
+  .escena-dibujo {
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-position: 50% 0;
+    transform: none;
   }
 }
 
@@ -74,7 +109,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   background:
     linear-gradient(180deg, rgba(6, 12, 20, 0.5) 0%, rgba(6, 12, 20, 0.1) 22%,
                     rgba(6, 12, 20, 0.1) 60%, rgba(6, 12, 20, 0.55) 100%);
@@ -84,7 +119,7 @@ body {
 #polvo {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: 2;
   display: block;
   opacity: 1;
   transition: opacity 1.2s ease;

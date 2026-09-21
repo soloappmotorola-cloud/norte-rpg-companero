@@ -7,6 +7,7 @@
 <meta name="description" content="Fichas de personajes, bestiario y reglas rápidas de Calabozos y Dragones (Norte).">
 <meta name="theme-color" content="#0c1a26">
 <link rel="manifest" href="manifest.json">
+<link rel="preload" href="img/escena-puna.svg" as="image" fetchpriority="high">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +18,11 @@
 <body>
 
   <!-- Escena de la Puna (luna, cerro, Runa Uturunco): fondo fijo y único de toda la app.
-       El dibujo es un SVG estático puesto desde CSS; lo único vivo es el polvo de arena. -->
+       El dibujo va como <img> y no como imagen de fondo de CSS a propósito: en Chrome de Android
+       una imagen de fondo dentro de un elemento `position: fixed` puede quedar sin pintarse hasta
+       que algo dispara un repintado (ver bitácora, sesión 11). Lo único vivo es el polvo de arena. -->
   <div class="escena" aria-hidden="true">
+    <img class="escena-dibujo" src="img/escena-puna.svg" alt="" fetchpriority="high" decoding="async">
     <canvas id="polvo"></canvas>
   </div>
 
