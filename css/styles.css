@@ -20,10 +20,26 @@
 
 * { box-sizing: border-box; }
 
+/* La app es de una sola pantalla, como una app nativa: el DOCUMENTO no se scrollea nunca.
+   Si algo no entra (el panel de reglas, o una pantalla muy baja) el scroll pasa adentro de
+   .contenido, así la escena de fondo queda clavada y no se corre con el dedo.
+
+   Dos cosas lo hacían scrollear antes:
+   - `min-height: 100vh` en el body: en Chrome de Android `100vh` es la pantalla CON la barra de
+     direcciones escondida, así que con la barra a la vista el body siempre medía ~100 px más que
+     lo que se ve, y esos 100 px se podían arrastrar.
+   - `overflow-x: hidden` en el body: cuando un eje es `hidden` y el otro `visible`, el CSS
+     convierte el otro en `auto` — o sea que esa sola línea convertía al body en un contenedor de
+     scroll vertical (se veía en el estilo calculado: `hidden/auto`). */
 html, body {
   margin: 0;
-  height: 100%;
   overscroll-behavior: none;
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+  background: var(--noche); /* si algún navegador igual deja rebotar, que rebote en negro-noche */
 }
 
 body {
@@ -32,11 +48,15 @@ body {
   /* Fondo de respaldo, por si la escena todavía no cargó. Sin `background-attachment: fixed`:
      en los navegadores de celular es otra fuente conocida de repintados que no ocurren. */
   background: linear-gradient(180deg, var(--noche) 0%, var(--cielo) 55%, var(--tierra) 100%);
-  min-height: 100vh;
+  /* Alto exacto de lo que se ve, igual que .escena (ver el comentario de ahí). Nada de
+     `min-height`: el body no puede crecer más que la pantalla. */
+  height: 100vh;
+  height: 100dvh;
+  height: var(--alto-visible, 100dvh);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   position: relative;
-  overflow-x: hidden;
 }
 
 /* --- Escena de la Puna: el mismo dibujo de juego-norte/pagina/ (luna, cerro, Runa Uturunco)
@@ -130,8 +150,9 @@ body {
 .app-header {
   position: relative;
   z-index: 1;
+  flex: 0 0 auto;
   text-align: center;
-  padding: 1.6rem 1rem 1rem;
+  padding: calc(1.2rem + env(safe-area-inset-top, 0px)) 1rem 0.9rem;
 }
 .app-header h1 {
   font-family: "Cinzel", serif;
@@ -151,11 +172,19 @@ body {
 }
 
 /* --- Contenido --- */
+/* El único que scrollea, y sólo cuando hace falta (panel de reglas, pantallas muy bajas).
+   `min-height: 0` es imprescindible: sin eso un ítem de flex no se achica por debajo de su
+   contenido y el desborde se lo come el body. */
 .contenido {
   position: relative;
   z-index: 1;
-  flex: 1;
-  padding: 0.5rem 1rem 6rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.5rem 1rem;
   max-width: 720px;
   margin: 0 auto;
   width: 100%;
@@ -194,6 +223,19 @@ body {
   justify-content: center;
   cursor: pointer;
 }
+/* Pantallas bajas (celular acostado, o un celular chico en vertical): se achica la carta para que
+   entre entera, en vez de que quede cortada y haya que scrollear adentro de .contenido. */
+@media (max-height: 560px) {
+  .app-header { padding: calc(0.6rem + env(safe-area-inset-top, 0px)) 1rem 0.4rem; }
+  .app-header h1 { font-size: 1.25rem; }
+  .subtitulo { font-size: 0.75rem; }
+  .carrusel { padding: 0.6rem 0 0.2rem; }
+  .carrusel-pista {
+    width: min(clamp(150px, 62vw, 280px), calc((var(--alto-visible, 100dvh) - 230px) * 3 / 4.2));
+  }
+  .carrusel-controles { margin-top: 0.5rem; }
+}
+
 .car-flecha:disabled { opacity: 0.3; cursor: default; }
 .car-puntos { display: flex; align-items: center; gap: 0.4rem; }
 .car-punto {
@@ -368,10 +410,13 @@ body {
 }
 
 /* --- Barra de navegación inferior, vidrio flotante --- */
+/* Ya no es `sticky`: ahora es el último ítem del flex del body, que mide exactamente la
+   pantalla. Sticky sólo tenía sentido cuando el documento scrolleaba. */
 .tab-bar {
-  position: sticky;
-  bottom: 0.9rem;
+  position: relative;
+  flex: 0 0 auto;
   align-self: center;
+  margin-bottom: calc(0.9rem + env(safe-area-inset-bottom, 0px));
   z-index: 2;
   display: flex;
   gap: 0.3rem;
