@@ -16,8 +16,10 @@
 </head>
 <body>
 
-  <div class="polvareda" aria-hidden="true">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  <!-- Escena de la Puna (luna, cerro, Runa Uturunco): fondo fijo y único de toda la app.
+       El dibujo es un SVG estático puesto desde CSS; lo único vivo es el polvo de arena. -->
+  <div class="escena" aria-hidden="true">
+    <canvas id="polvo"></canvas>
   </div>
 
   <header class="app-header">
@@ -44,5 +46,6 @@
 
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/escena.js" defer></script>
 </body>
 </html>

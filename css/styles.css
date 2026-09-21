@@ -11,6 +11,9 @@
   --texto: #f3eedd;
   --texto-suave: #c9bfa8;
   --vidrio: rgba(243, 238, 221, 0.08);
+  /* Panel de vidrio OSCURO: las tarjetas y paneles van sobre la escena real (luna grande,
+     cerro claro), así que el fondo translúcido no puede ser claro o el texto se lava. */
+  --vidrio-panel: rgba(9, 19, 29, 0.6);
   --vidrio-borde: rgba(240, 200, 119, 0.28);
   --sombra: rgba(6, 10, 16, 0.5);
 }
@@ -37,68 +40,56 @@ body {
   overflow-x: hidden;
 }
 
-/* Silueta de cerro fija al pie, eco liviano (CSS, sin SVG pesado) de la escena de pagina/ */
-body::after {
-  content: "";
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  height: 22vh;
-  pointer-events: none;
-  z-index: 0;
-  background: var(--noche);
-  opacity: 0.55;
-  clip-path: polygon(
-    0% 100%, 0% 55%, 10% 62%, 20% 40%, 32% 58%, 44% 30%, 56% 52%,
-    68% 20%, 78% 48%, 88% 35%, 100% 60%, 100% 100%
-  );
-}
-
-/* Textura de niebla/grano sutil sobre el fondo, sin pesar (SVG generado en CSS, no una imagen) */
-body::before {
-  content: "";
+/* --- Escena de la Puna: el mismo dibujo de juego-norte/pagina/ (luna, cerro, Runa Uturunco)
+   como fondo fijo y compartido de toda la app. Va como imagen de fondo (un único SVG con las
+   dos texturas adentro) y no como SVG en el DOM: así el navegador lo dibuja una sola vez y lo
+   guarda rasterizado, en vez de mantener miles de trazos vivos en la página. --- */
+.escena {
   position: fixed;
   inset: 0;
+  z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-color: var(--noche);
+  background-image: url("../img/escena-puna.svg");
+  background-repeat: no-repeat;
+  /* Apaisado (celular acostado, tablet, escritorio): la escena llena la pantalla como en
+     juego-norte/pagina/, anclada arriba para que la luna no quede justo detrás del título. */
+  background-position: 50% 0%;
+  background-size: cover;
 }
 
-/* --- Polvareda: partículas de arena arrastradas por el viento, detalle dinámico de la Puna de noche --- */
-.polvareda {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+/* Vertical (el caso normal en la mesa): la escena se apoya abajo como una franja, así la luna
+   y el Runa Uturunco parado en el cerro quedan DEBAJO de las tarjetas en vez de tapados por
+   ellas. El resto de la pantalla es cielo, que es el mismo color de fondo. */
+@media (max-aspect-ratio: 1/1) {
+  .escena {
+    background-position: 50% 100%;
+    background-size: auto 42%;
+  }
 }
-.polvareda span {
+
+/* Velo de lectura: oscurece un poco arriba y abajo para que el título, las tarjetas y la barra
+   de pestañas se lean sobre la luna sin tapar la escena. */
+.escena::after {
+  content: "";
   position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: var(--dorado-claro);
-  box-shadow: 0 0 5px 1px rgba(240, 200, 119, 0.6);
-  opacity: 0;
-  animation: arrastrar 11s linear infinite, brillar 4s ease-in-out infinite;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 12, 20, 0.5) 0%, rgba(6, 12, 20, 0.1) 22%,
+                    rgba(6, 12, 20, 0.1) 60%, rgba(6, 12, 20, 0.55) 100%);
 }
-.polvareda span:nth-child(1) { left: 4%;  top: 75%; animation-delay: 0s, 0.2s; }
-.polvareda span:nth-child(2) { left: 18%; top: 35%; animation-delay: 1.4s, 0.6s; }
-.polvareda span:nth-child(3) { left: 34%; top: 85%; animation-delay: 2.8s, 1s; }
-.polvareda span:nth-child(4) { left: 50%; top: 25%; animation-delay: 0.7s, 1.4s; }
-.polvareda span:nth-child(5) { left: 64%; top: 65%; animation-delay: 3.6s, 0.4s; }
-.polvareda span:nth-child(6) { left: 78%; top: 40%; animation-delay: 2.1s, 1.8s; }
-.polvareda span:nth-child(7) { left: 90%; top: 78%; animation-delay: 3.1s, 0.8s; }
-.polvareda span:nth-child(8) { left: 46%; top: 55%; animation-delay: 0.4s, 2.2s; }
 
-@keyframes arrastrar {
-  0%   { transform: translate(0, 0); }
-  50%  { transform: translate(-30px, -10px); }
-  100% { transform: translate(-60px, -4px); }
+/* Polvo de arena que reacciona al dedo. Se frena solo cuando nadie toca (ver js/escena.js). */
+#polvo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: block;
+  opacity: 1;
+  transition: opacity 1.2s ease;
 }
-@keyframes brillar {
-  0%, 100% { opacity: 0; }
-  50%      { opacity: 0.8; }
-}
+#polvo.en-reposo { opacity: 0.55; }
 
 /* --- Encabezado --- */
 .app-header {
@@ -121,6 +112,7 @@ body::before {
   font-size: 0.85rem;
   color: var(--texto-suave);
   letter-spacing: 0.02em;
+  text-shadow: 0 1px 6px rgba(6, 10, 16, 0.85);
 }
 
 /* --- Contenido --- */
@@ -203,9 +195,10 @@ body::before {
   padding: 0.9rem;
   display: flex;
   flex-direction: column;
-  background: var(--vidrio);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Sin backdrop-filter a propósito: la cara de adelante va tapada por la ilustración y la de
+     atrás es casi opaca, así que el desenfoque no aportaba nada y obligaba al celular a
+     recalcular el borroso encima del polvo de arena en cada cuadro. */
+  background: var(--vidrio-panel);
   border: 1px solid var(--vidrio-borde);
   box-shadow: 0 8px 24px var(--sombra);
   overflow: hidden;
@@ -225,7 +218,9 @@ body::before {
 .card-frente--vacia {
   align-items: center;
   justify-content: center;
-  background: repeating-linear-gradient(135deg, rgba(240,200,119,0.06) 0 10px, transparent 10px 20px);
+  background:
+    repeating-linear-gradient(135deg, rgba(240,200,119,0.06) 0 10px, transparent 10px 20px),
+    var(--vidrio-panel);
 }
 .card-frente--vacia .card-frente-info { position: static; background: none; padding: 0 0.9rem 0.9rem; }
 
@@ -295,9 +290,9 @@ body::before {
 
 /* --- Reglas rápidas --- */
 .panel-reglas {
-  background: var(--vidrio);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  background: var(--vidrio-panel);
+  backdrop-filter: blur(6px) saturate(1.1);
+  -webkit-backdrop-filter: blur(6px) saturate(1.1);
   border: 1px solid var(--vidrio-borde);
   border-radius: 16px;
   padding: 1.2rem;
@@ -386,4 +381,6 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .contenido.entrando { animation: none; }
   .carrusel-pista .card { transition: none; }
+  /* La arena se dibuja una sola vez y queda quieta (ver js/escena.js). */
+  #polvo { transition: none; opacity: 0.7; }
 }
