@@ -1,7 +1,7 @@
 {
-  "name": "Leyendas y Monstruos — Norteño",
-  "short_name": "Norteño",
-  "description": "Fichas de personajes, bestiario y reglas rápidas para jugar Leyendas y Monstruos — Norteño.",
+  "name": "Leyendas y Monstruos — Norte",
+  "short_name": "Norte",
+  "description": "Fichas de personajes, bestiario y reglas rápidas para jugar Leyendas y Monstruos — Norte.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
