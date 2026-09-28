@@ -1,6 +1,6 @@
 // Al subir la versión se vuelve a instalar el service worker y se rehace el cache: es la única
 // forma de que a quien ya tiene la app instalada le lleguen el HTML/CSS/JS nuevos.
-const CACHE = "norte-rpg-v4";
+const CACHE = "norte-rpg-v5";
 
 // Lo mínimo para que la app abra sin conexión.
 const ARCHIVOS = [
@@ -22,14 +22,14 @@ const ILUSTRACIONES = [
   "cazador-de-la-puna", "coquena-yastay", "el-chiqui", "el-uturunco",
   "embaucador-del-rio", "guardian-del-monte-chaqueno", "kedokpolyo", "nanaykpolyo",
   "nesoge", "pachamama", "portadora-de-la-challa", "runa-uturunco",
-  "salamanquero", "ucumar", "ukumari", "visionario-qom", "wosak"
+  "salamanquera", "ucumar", "ukumari", "visionario-qom", "wosak"
 ].map((n) => `./img/${n}.webp`);
 
 self.addEventListener("install", (evento) => {
   evento.waitUntil(
     caches.open(CACHE).then(async (cache) => {
       await cache.addAll(ARCHIVOS);
-      await Promise.allSettled(ILUSTRACIONES.map((u) => cache.add(u)));
+      await Promise.allSettled(ILUSTRACIONES.map((u) => cache.add(new Request(u, { cache: "reload" }))));
       await self.skipWaiting();
     })
   );

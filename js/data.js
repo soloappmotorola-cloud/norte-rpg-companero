@@ -42,9 +42,9 @@ const ARQUETIPOS = [
     don: "Fuerza que impone — una vez por escena, usa Fuerza en vez de Alma para intimidar o imponerse físicamente sin pelear."
   },
   {
-    nombre: "El Salamanquero",
+    nombre: "La Salamanquera",
     raiz: "Zupay y la Salamanca",
-    img: "img/salamanquero.webp",
+    img: "img/salamanquera.webp",
     resumen: "Músico, jugador de naipes o jinete con un don sospechosamente perfecto; debe algo a Zupay y no sabe cuánto le queda de plazo.",
     prioridad: "Astucia, Alma",
     oficios: "Relato y canto, Trato con lo oculto",

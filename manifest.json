@@ -1,7 +1,7 @@
 {
-  "name": "Calabozos y Dragones (Norte) — Compañero de mesa",
-  "short_name": "Norte RPG",
-  "description": "Fichas de personajes, bestiario y reglas rápidas para jugar Calabozos y Dragones (Norte).",
+  "name": "Leyendas y Monstruos — Norteño",
+  "short_name": "Norteño",
+  "description": "Fichas de personajes, bestiario y reglas rápidas para jugar Leyendas y Monstruos — Norteño.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
